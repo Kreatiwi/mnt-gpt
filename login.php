@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+<h2>Anmeldung</h2>
+<form id="loginForm">
+    <div class="form-group">
+        <label for="username">Benutzername:</label>
+        <input type="text" id="username" name="username" required />
+    </div>
+    <div class="form-group">
+        <label for="password">Passwort:</label>
+        <input type="password" id="password" name="password" required />
+    </div>
+    <button type="submit">Anmelden</button>
+</form>
+
+<div id="message" class="message" style="display: none;"></div>
+
+<script>
+    const form = document.getElementById('loginForm')
+    const messageBox = document.getElementById('message')
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault()
+        messageBox.style.display = 'none'
+
+        const username = form.username.value
+        const password = form.password.value
+
+        try {
+            const res = await fetch("https://keepznnvijtatmbfxbar.functions.supabase.co/login-user", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            })
+
+            const result = await res.json()
+
+            if (result.success) {
+                messageBox.textContent = `✅ Token: ${result.token}`
+                messageBox.className = 'message success'
+            } else {
+                messageBox.textContent = `❌ Fehler: ${result.error}`
+                messageBox.className = 'message error'
+            }
+
+            messageBox.style.display = 'block'
+        } catch (err) {
+            messageBox.textContent = `❌ Netzwerkfehler: ${err.message}`
+            messageBox.className = 'message error'
+            messageBox.style.display = 'block'
+        }
+    })
+</script>
+</body>
+</html>

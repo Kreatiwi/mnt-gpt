@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advancement Übersicht</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h2 {
+            margin-top: 40px;
+        }
+        .advancement-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .advancement {
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+        }
+        .owned {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .missing {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        .rankings {
+            margin-top: 20px;
+        }
+        .ranking-entry {
+            margin: 5px 0;
+        }
+        .token-input {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Advancement Übersicht</h1>
+
+<div class="token-input">
+    <label for="token">Dein Token:</label>
+    <input type="text" id="token" placeholder="Token eingeben" />
+    <button onclick="loadData()">Laden</button>
+</div>
+
+<div id="advancementsContainer">
+    <h2>Deine Fortschritte</h2>
+    <div class="advancement-list" id="advancementList"></div>
+</div>
+
+<div id="rankingContainer">
+    <h2>🏆 Ranking</h2>
+    <div class="rankings" id="rankingList"></div>
+</div>
+
+<script>
+    const API_BASE = "https://keepznnvijtatmbfxbar.functions.supabase.co"
+
+    async function loadData() {
+        const token = document.getElementById("token").value.trim()
+        if (!token) {
+            alert("Bitte gib deinen Token ein.")
+            return
+        }
+
+        try {
+            // 1. Lade alle Advancements
+            const allRes = await fetch(`${API_BASE}/get-advancements`)
+            const all = await allRes.json()
+
+            // 2. Lade User Fortschritte
+            const userRes = await fetch(`${API_BASE}/get-user-advancements`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token })
+            })
+            const userData = await userRes.json()
+            const ownedIds = new Set(userData.map(a => a.advancement))
+
+            // 3. Zeige sie an
+            const list = document.getElementById("advancementList")
+            list.innerHTML = ""
+            all.forEach(item => {
+                const el = document.createElement("div")
+                el.className = "advancement " + (ownedIds.has(item.id) ? "owned" : "missing")
+                el.innerHTML = `<strong>${item.advancement}</strong><br>${item.description}`
+                list.appendChild(el)
+            })
+
+            // 4. Lade Ranking
+            const rankRes = await fetch(`${API_BASE}/get-ranking`)
+            const ranking = await rankRes.json()
+            const rankList = document.getElementById("rankingList")
+            rankList.innerHTML = ""
+            ranking.forEach((user, i) => {
+                rankList.innerHTML += `<div class="ranking-entry">#${i + 1}: ${user.username} – ${user.count} Fortschritte</div>`
+            })
+
+        } catch (err) {
+            alert("Fehler beim Laden der Daten: " + err.message)
+        }
+    }
+</script>
+
+</body>
+</html>
