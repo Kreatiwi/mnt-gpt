@@ -85,7 +85,7 @@
                 body: JSON.stringify({ token })
             })
             const userData = await userRes.json()
-            const ownedIds = new Set(userData.map(a => a.advancement))
+            const ownedIds = new Set(userData.map(a => a.advancement_id))
 
             // 3. Zeige sie an
             const list = document.getElementById("advancementList")
