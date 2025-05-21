@@ -91,10 +91,12 @@
             const list = document.getElementById("advancementList")
             list.innerHTML = ""
             all.forEach(item => {
-                const el = document.createElement("div")
-                el.className = "advancement " + (ownedIds.has(item.id) ? "owned" : "missing")
-                el.innerHTML = `<strong>${item.name}</strong><br>${item.description}`
-                list.appendChild(el)
+                if (!item.hiden) {
+                    const el = document.createElement("div")
+                    el.className = "advancement " + (ownedIds.has(item.id) ? "owned" : "missing")
+                    el.innerHTML = `<strong>${item.name}</strong><br>${item.description}`
+                    list.appendChild(el)
+                }
             })
 
             // 4. Lade Ranking
