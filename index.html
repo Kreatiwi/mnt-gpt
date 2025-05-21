@@ -47,6 +47,11 @@
         .user-input {
             margin: 20px 0;
         }
+        #progressInfo {
+            font-size: 1rem;
+            color: #555;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -65,7 +70,10 @@
 </div>
 
 <div id="advancementsContainer">
-    <h2>Deine Fortschritte</h2>
+    <h2>
+        Deine Fortschritte
+        <span id="progressInfo"></span>
+    </h2>
     <div class="advancement-list" id="advancementList"></div>
 </div>
 
@@ -78,7 +86,7 @@
             const ranking = await rankRes.json()
             const rankList = document.getElementById("rankingList")
             rankList.innerHTML = ""
-            ranking.forEach((user, i) => {
+            ranking.slice(0, 5).forEach((user, i) => {
                 rankList.innerHTML += `<div class="ranking-entry">#${i + 1}: ${user.username} – ${user.count} Fortschritte</div>`
             })
         } catch (err) {
@@ -94,22 +102,22 @@
         }
 
         try {
-            // 1. Lade alle Advancements
-            const allRes = await fetch(`${API_BASE}/get-advancements`)
-            const all = await allRes.json()
+            const [allRes, userRes] = await Promise.all([
+                fetch(`${API_BASE}/get-advancements`),
+                fetch(`${API_BASE}/get-user-advancements`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username })
+                })
+            ])
 
-            // 2. Lade Fortschritte des Benutzers
-            const userRes = await fetch(`${API_BASE}/get-user-advancements`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username })
-            })
+            const all = await allRes.json()
             const userData = await userRes.json()
             const ownedIds = new Set(userData.map(a => a.advancement_id))
 
-            // 3. Zeige Fortschritte an
             const list = document.getElementById("advancementList")
             list.innerHTML = ""
+
             all.forEach(item => {
                 if (!item.hiden || ownedIds.has(item.id)) {
                     const el = document.createElement("div")
@@ -118,12 +126,15 @@
                     list.appendChild(el)
                 }
             })
+
+            // Fortschrittsanzeige
+            const progressText = `${ownedIds.size} / ${all.length}`
+            document.getElementById("progressInfo").textContent = `(${progressText})`
         } catch (err) {
             alert("Fehler beim Laden der Daten: " + err.message)
         }
     }
 
-    // Lade Ranking direkt beim Seitenstart
     loadRanking()
 </script>
 
