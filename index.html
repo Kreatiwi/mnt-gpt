@@ -93,7 +93,7 @@
             all.forEach(item => {
                 const el = document.createElement("div")
                 el.className = "advancement " + (ownedIds.has(item.id) ? "owned" : "missing")
-                el.innerHTML = `<strong>${item.advancement}</strong><br>${item.description}`
+                el.innerHTML = `<strong>${item.name}</strong><br>${item.description}`
                 list.appendChild(el)
             })
 
