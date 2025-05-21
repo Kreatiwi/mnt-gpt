@@ -91,7 +91,7 @@
             const list = document.getElementById("advancementList")
             list.innerHTML = ""
             all.forEach(item => {
-                if (!item.hiden) {
+                if (!item.hiden || ownedIds.has(item.id)) {
                     const el = document.createElement("div")
                     el.className = "advancement " + (ownedIds.has(item.id) ? "owned" : "missing")
                     el.innerHTML = `<strong>${item.name}</strong><br>${item.description}`
