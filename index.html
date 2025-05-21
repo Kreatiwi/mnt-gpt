@@ -8,14 +8,16 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            margin: 0;
         }
-        h2 {
-            margin-top: 40px;
+        h1, h2 {
+            margin-top: 20px;
         }
         .advancement-list {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
+            margin-top: 20px;
         }
         .advancement {
             border: 2px solid #ccc;
@@ -31,14 +33,19 @@
             background-color: #f8d7da;
             border-color: #dc3545;
         }
-        .rankings {
-            margin-top: 20px;
+        .ranking-container {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding: 10px 0;
+            z-index: 10;
+            border-bottom: 2px solid #ccc;
         }
         .ranking-entry {
             margin: 5px 0;
         }
-        .token-input {
-            margin-bottom: 20px;
+        .user-input {
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -46,10 +53,15 @@
 
 <h1>Advancement Übersicht</h1>
 
-<div class="token-input">
-    <label for="token">Dein Token:</label>
-    <input type="text" id="token" placeholder="Token eingeben" />
-    <button onclick="loadData()">Laden</button>
+<div class="ranking-container" id="rankingContainer">
+    <h2>🏆 Ranking</h2>
+    <div class="rankings" id="rankingList">Lade Ranking...</div>
+</div>
+
+<div class="user-input">
+    <label for="username">Dein Benutzername:</label>
+    <input type="text" id="username" placeholder="Benutzernamen eingeben" />
+    <button onclick="loadData()">Fortschritte laden</button>
 </div>
 
 <div id="advancementsContainer">
@@ -57,19 +69,27 @@
     <div class="advancement-list" id="advancementList"></div>
 </div>
 
-<div id="rankingContainer">
-    <h2>🏆 Ranking</h2>
-    <div class="rankings" id="rankingList"></div>
-</div>
-<base href="/mnt-gpt/">
-
 <script>
     const API_BASE = "https://keepznnvijtatmbfxbar.functions.supabase.co"
 
+    async function loadRanking() {
+        try {
+            const rankRes = await fetch(`${API_BASE}/get-ranking`)
+            const ranking = await rankRes.json()
+            const rankList = document.getElementById("rankingList")
+            rankList.innerHTML = ""
+            ranking.forEach((user, i) => {
+                rankList.innerHTML += `<div class="ranking-entry">#${i + 1}: ${user.username} – ${user.count} Fortschritte</div>`
+            })
+        } catch (err) {
+            document.getElementById("rankingList").innerText = "Fehler beim Laden des Rankings."
+        }
+    }
+
     async function loadData() {
-        const token = document.getElementById("token").value.trim()
-        if (!token) {
-            alert("Bitte gib deinen Token ein.")
+        const username = document.getElementById("username").value.trim()
+        if (!username) {
+            alert("Bitte gib deinen Benutzernamen ein.")
             return
         }
 
@@ -78,16 +98,16 @@
             const allRes = await fetch(`${API_BASE}/get-advancements`)
             const all = await allRes.json()
 
-            // 2. Lade User Fortschritte
+            // 2. Lade Fortschritte des Benutzers
             const userRes = await fetch(`${API_BASE}/get-user-advancements`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ token })
+                body: JSON.stringify({ username })
             })
             const userData = await userRes.json()
             const ownedIds = new Set(userData.map(a => a.advancement_id))
 
-            // 3. Zeige sie an
+            // 3. Zeige Fortschritte an
             const list = document.getElementById("advancementList")
             list.innerHTML = ""
             all.forEach(item => {
@@ -98,20 +118,13 @@
                     list.appendChild(el)
                 }
             })
-
-            // 4. Lade Ranking
-            const rankRes = await fetch(`${API_BASE}/get-ranking`)
-            const ranking = await rankRes.json()
-            const rankList = document.getElementById("rankingList")
-            rankList.innerHTML = ""
-            ranking.forEach((user, i) => {
-                rankList.innerHTML += `<div class="ranking-entry">#${i + 1}: ${user.username} – ${user.count} Fortschritte</div>`
-            })
-
         } catch (err) {
             alert("Fehler beim Laden der Daten: " + err.message)
         }
     }
+
+    // Lade Ranking direkt beim Seitenstart
+    loadRanking()
 </script>
 
 </body>
